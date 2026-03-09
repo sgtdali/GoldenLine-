@@ -1,0 +1,65 @@
+@tailwind components;
+
+@layer components {
+  .react-flow__node:has(.grup-node-wrapper) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    pointer-events: none;
+    z-index: 0 !important;
+  }
+
+  .grup-node-wrapper {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #aaa;
+    background: rgba(0, 120, 212, 0.05);
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .grup-node-header {
+    padding: 5px 10px;
+    background: rgba(80, 80, 80, 0.1);
+    border-bottom: 1px solid #aaa;
+    text-align: left;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .grup-node-duration {
+    font-weight: 600;
+    font-size: 12px;
+    color: #ff8c00;
+  }
+
+  .react-flow__node.parent-selected .grup-node-wrapper {
+    border: 2px solid #ff8c00;
+    box-shadow: 0 0 8px rgba(255, 140, 0, 0.4);
+  }
+
+  .react-flow__node.selected .grup-node-wrapper {
+    border: 2px solid #ff8c00;
+    box-shadow: 0 0 8px rgba(255, 140, 0, 0.4);
+  }
+
+  .react-flow__node:has(.grup-node-wrapper) .grup-node-header {
+    pointer-events: all;
+  }
+
+  .react-flow__node:has(.grup-node-wrapper) .react-flow__node-resizer {
+    pointer-events: all;
+    z-index: 10;
+  }
+
+  .react-flow__node:has(.grup-node-wrapper) .grup-node-handle {
+    pointer-events: all;
+    z-index: 15;
+  }
+}

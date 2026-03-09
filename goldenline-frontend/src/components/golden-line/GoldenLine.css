@@ -1,0 +1,504 @@
+@tailwind components;
+
+@layer components {
+/* === NODE EDITOR HEADER STYLES (EKLENECEK) === */
+
+.node-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-button.back-button {
+  background: none;
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header-button.back-button:hover {
+  background-color: #f4f4f4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.breadcrumb-segment {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb-separator {
+  margin: 0 8px;
+  color: #999;
+  font-size: 14px;
+  user-select: none;
+}
+
+.breadcrumb-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.breadcrumb-button:hover {
+  background-color: #f0f0f0;
+  text-decoration: none;
+}
+
+.breadcrumb-label.active {
+  color: #333;
+  font-weight: 600;
+  padding: 4px 8px;
+  font-size: 16px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.critical-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #333;
+  user-select: none;
+}
+
+.critical-toggle input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #d9534f;
+  cursor: pointer;
+}
+
+.header-button.save-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header-button.save-button:hover {
+  background-color: #0056b3;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* === MEVCUT STİLLER (DOKUNMA) === */
+
+.node-editor-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* 100vh: Ekranın tamamını kapla */
+}
+
+/* EDGE STYLES (FINAL CORRECTED VERSION)
+*/
+
+/* VARSAYILAN KENAR (OK) GÖVDESİ */
+.node-editor-container .react-flow-wrapper .react-flow__edge-path {
+  stroke: #0078d4; /* Varsayılan Mavi */
+  stroke-width: 2px;
+}
+
+/* VARSAYILAN KENAR (OK) UCU */
+.node-editor-container .react-flow-wrapper .react-flow__marker-arrowhead path {
+  fill: #0078d4; /* Varsayılan Mavi */
+  stroke: none;
+}
+
+/* --- DÜZELTİLMİŞ SEÇİLİ KENAR (OK) GÖVDESİ ---
+  Doğru seçici: .react-flow__edge.selected .react-flow__edge-path
+*/
+.node-editor-container .react-flow-wrapper .react-flow__edge.selected .react-flow__edge-path {
+  stroke: #ff8c00 !important; /* Turuncu (ve !important) */
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 0 4px rgba(255, 140, 0, 0.8));
+}
+
+/* --- DÜZELTİLMİŞ SEÇİLİ KENAR (OK) UCU ---
+  Doğru seçici: .react-flow__edge.selected ...
+*/
+.node-editor-container .react-flow-wrapper .react-flow__edge.selected .react-flow__marker-arrowhead path {
+  fill: #ff8c00 !important; /* Turuncu (ve !important) */
+  stroke: none;
+}
+
+.editor-container {
+  flex-grow: 1; /* Header dışında kalan tüm alanı kapla */
+  display: flex; /* İçerideki sidebar ve wrapper'ı yan yana koy */
+  overflow: hidden; /* Taşmaları engelle */
+}
+
+/* Sol Panel (Sprint 2 Arayüz Tasarımı) */
+.sidebar {
+  width: 10%;
+  min-width: 250px;
+  padding: 1rem;
+  border-right: 2px solid #e0e0e0;
+  background-color: #f8f9fa;
+  overflow-y: auto; /* İçerik taşarsa scroll çıksın */
+}
+
+.sidebar h3 {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+/* Sağ Taraf - React Flow Tuvalinin sarmalayıcı */
+.react-flow-wrapper {
+  flex-grow: 1; /* Kalan tüm alanı kapla */
+  height: 100%;
+  background-color: #f0f2f5;
+}
+
+/* React Flow'un kendisine ait */
+.react-flow .react-flow__pane {
+  cursor: grab;
+}
+
+/* Sağdaki Detay Paneli (Inspector) */
+.inspector-panel {
+  width: 22%;
+  min-width: 280px;
+  max-width: 60%;
+  padding: 1rem;
+  border-left: 2px solid #e0e0e0;
+  background-color: #f8f9fa;
+  overflow: auto;
+  flex: 0 0 auto;
+}
+
+.inspector-resize-handle {
+  width: 6px;
+  cursor: col-resize;
+  background: linear-gradient(to right, transparent 0%, #d1d5db 50%, transparent 100%);
+  flex: 0 0 auto;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+}
+
+.inspector-panel h3 {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+/* Sprint 4 - Tamamlanma yüzdesi input'u için stiller */
+.inspector-panel .form-group {
+  margin-top: 1.5rem;
+}
+
+.inspector-panel .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.inspector-panel .inspector-input {
+  width: 100%;
+  padding: 0.75rem;
+  box-sizing: border-box; /* Önemli */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.react-flow__node.react-flow__node-grup {
+  box-sizing: border-box !important;
+  border: 1px dashed #555 !important;
+  border-radius: 5px !important;
+  background: rgba(0, 120, 212, 0.05) !important;
+  overflow: visible !important;
+  min-width: 200px;
+  min-height: 150px;
+  padding: 0 !important;
+}
+
+/* Sprint 5 Buton Stilleri */
+/* Sidebar'daki genel buton stili */
+.sidebar-button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  color: white;
+  text-align: left;
+}
+
+/* Farklı buton renkleri */
+.sidebar-button.export {
+  background-color: #1e6031; /* MS Project Yeşili (Yaklaşık) */
+}
+.sidebar-button.export:hover {
+  background-color: #154222;
+}
+
+.sidebar-button.import {
+  background-color: #0078d4; /* Microsoft Mavisi */
+}
+.sidebar-button.import:hover {
+  background-color: #005a9e;
+}
+
+.sidebar-button.reset {
+  background-color: #dc3545; /* Kırmızı */
+}
+.sidebar-button.reset:hover {
+  background-color: #c82333;
+}
+
+/* Sol paneldeki sürükle-bırak düğümleri */
+.dndnode {
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  background: #ffffff;
+  cursor: grab;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.dndnode:active {
+  cursor: grabbing;
+}
+
+/* Farklı node tipleri için farklı renkler */
+.dndnode.input {
+  border-color: #28a745; /* Yeşil */
+  color: #28a745;
+}
+
+.dndnode.output {
+  border-color: #dc3545; /* Kırmızı */
+  color: #dc3545;
+}
+
+/* Sprint 7: Öncül ve Ardıl Listeleri Stili */
+.dependency-list {
+  list-style-type: none;
+  padding: 0.5rem;
+  margin: 0.25rem 0 0 0;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 150px; /* Listeler çok uzarsa scroll çıksın */
+  overflow-y: auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.dependency-list li {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.dependency-list li:last-child {
+  border-bottom: none;
+}
+
+/* Liste boşsa gösterilecek mesaj */
+.dependency-list li.empty {
+  color: #888;
+  font-style: italic;
+  border-bottom: none;
+}
+
+.inspector-image-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.inspector-image-preview img {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
+.inspector-button {
+  align-self: flex-start;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.inspector-button:hover {
+  background-color: #c82333;
+}
+
+.inspector-image-status {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.inspector-image-error {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #dc3545;
+}
+
+/* EDGE STYLES
+  (Explicitly define default and selected states with high specificity)
+*/
+
+/* VARSAYILAN KENAR (OK) GÖVDESİ */
+.node-editor-container .react-flow-wrapper .react-flow__edge-path {
+  stroke: #0078d4; /* Varsayılan Mavi */
+  stroke-width: 2px;
+}
+
+/* VARSAYILAN KENAR (OK) UCU */
+/* (JS'den kaldırılan 'markerEnd.color' yerine geçer) */
+.node-editor-container .react-flow-wrapper .react-flow__marker-arrowhead path {
+  fill: #0078d4; /* Varsayılan Mavi */
+  stroke: none;
+}
+
+/* SEÇİLİ KENAR (OK) GÖVDESİ */
+.node-editor-container .react-flow-wrapper .react-flow__edge-path.selected {
+  stroke: #ff8c00; /* Seçilince Turuncu */
+  stroke-width: 3.5px;
+  filter: drop-shadow(0 0 4px rgba(255, 140, 0, 0.8));
+}
+
+/* SEÇİLİ KENAR (OK) UCU */
+.node-editor-container .react-flow-wrapper .react-flow__edge.selected .react-flow__marker-arrowhead path {
+  fill: #ff8c00; /* Seçilince Turuncu */
+  stroke: none;
+}
+
+/* VARSAYILAN KENAR (OK) STİLİ */
+.node-editor-container .react-flow-wrapper .react-flow__edge-path {
+  stroke: #0078d4; /* Microsoft Mavisi */
+  stroke-width: 2px; /* Varsayılan kalınlık */
+}
+
+/* SEÇİLİ KENAR (OK) STİLLERİ */
+
+/* Seçili kenarın (okun) ana çizgisi */
+.node-editor-container .react-flow-wrapper .react-flow__edge-path.selected {
+  /* Not: Kenar rengi ve kalınlığı 'onConnect' içinde 
+    (style: { stroke: '#0078d4', strokeWidth: 2 }) 
+    veya edge'in kendisinde tanımlanmış olabilir.
+    Buradaki '' kullanımı, bu inline stilleri ezmek 
+    için gerekebilir, ancak önce onsuz deneyelim.
+  */
+  stroke: #ff8c00; /* Microsoft Mavisi */
+  stroke-width: 3.5px; /* Çizgiyi daha kalın yap */
+  /* Düğümlerdeki box-shadow'a en yakın efekt olan drop-shadow'u kullanalım */
+  filter: drop-shadow(0 0 4px rgba(255, 140, 0, 0.8));
+}
+
+/* Seçili kenarın ok ucu */
+.node-editor-container .react-flow-wrapper .react-flow__edge.selected .react-flow__marker-arrowhead path {
+  fill: #ff8c00; /* Ok ucunun dolgu rengini ana renkle eşleştir */
+  stroke: none;
+}
+
+.critical-path-error {
+  margin: 0.5rem 20px;
+  color: #d9534f;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.react-flow__edge.critical-edge .react-flow__edge-path {
+  stroke: #d9534f !important;
+  stroke-width: 3px !important;
+}
+
+.react-flow__edge.critical-edge .react-flow__marker-arrowhead path {
+  fill: #d9534f !important;
+}
+
+.react-flow__edge.edge-dim .react-flow__edge-path {
+  stroke: #c3c8cf !important;
+  opacity: 0.6;
+}
+
+.react-flow__edge.edge-dim .react-flow__marker-arrowhead path {
+  fill: #c3c8cf !important;
+  opacity: 0.6;
+}
+
+.node-floating-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 40;
+  pointer-events: none;
+}
+
+.node-floating-card {
+  pointer-events: auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.floating-title {
+  font-weight: 700;
+  color: #111827;
+  font-size: 14px;
+}
+
+.floating-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+}

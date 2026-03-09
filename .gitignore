@@ -1,0 +1,19 @@
+# --- .NET Core (Backend) ---
+[Bb]in/
+[Oo]bj/
+.*/tmp_build/
+tmp_build/
+.vs/
+*.user
+*.suo
+*.db
+
+# --- React (Frontend) ---
+goldenline-frontend/node_modules/
+goldenline-frontend/build/
+goldenline-frontend/.env.local
+
+# --- Genel ---
+.DS_Store
+*.log
+npm-debug.log

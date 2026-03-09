@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoldenLine.Desktop", "GoldenLine.Desktop\GoldenLine.Desktop.csproj", "{99143BDC-AF2F-4461-8502-3613018615EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoldenLine.Launcher", "GoldenLine.Launcher\GoldenLine.Launcher.csproj", "{B977BA70-A960-42F3-A1AA-73F6176E85FD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{99143BDC-AF2F-4461-8502-3613018615EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99143BDC-AF2F-4461-8502-3613018615EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99143BDC-AF2F-4461-8502-3613018615EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99143BDC-AF2F-4461-8502-3613018615EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B977BA70-A960-42F3-A1AA-73F6176E85FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B977BA70-A960-42F3-A1AA-73F6176E85FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B977BA70-A960-42F3-A1AA-73F6176E85FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B977BA70-A960-42F3-A1AA-73F6176E85FD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

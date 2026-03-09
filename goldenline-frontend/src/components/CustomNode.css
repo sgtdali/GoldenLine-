@@ -1,0 +1,176 @@
+@tailwind components;
+
+@layer components {
+
+  /* Reset default node wrapper styles when using custom node */
+  .react-flow__node:has(.custom-node-wrapper),
+  .react-flow__node-default:has(.custom-node-wrapper) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .custom-node-wrapper {
+    position: relative;
+    padding: 10px 20px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    background: #fff;
+    text-align: center;
+    font-size: 12px;
+    min-width: 150px;
+  }
+
+  .custom-node-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .custom-node-title {
+    font-weight: 600;
+    font-size: 12px;
+    word-break: break-word;
+  }
+
+  .custom-node-type {
+    font-size: 8px;
+    font-weight: 800;
+    color: #94a3b8;
+    /* slate-400 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+    line-height: 1;
+  }
+
+  .custom-node-meta {
+    font-size: 10px;
+    color: #555;
+  }
+
+  .custom-node-image {
+    margin-top: 6px;
+  }
+
+  .custom-node-image img {
+    max-width: 100%;
+    max-height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .custom-node-wrapper .react-flow__handle {
+    width: 8px;
+    height: 8px;
+    background-color: #777;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .custom-node-wrapper:hover .react-flow__handle,
+  .custom-node-wrapper .react-flow__handle:hover {
+    opacity: 1;
+    background-color: #007bff;
+  }
+
+  /* Positioning for singular handle ids */
+  /* Top */
+  .custom-node-wrapper .react-flow__handle[data-handleid="top"] {
+    top: -5px;
+  }
+
+  /* Bottom */
+  .custom-node-wrapper .react-flow__handle[data-handleid="bottom"] {
+    bottom: -5px;
+  }
+
+  /* Left */
+  .custom-node-wrapper .react-flow__handle[data-handleid="left"] {
+    left: -5px;
+  }
+
+  /* Right */
+  .custom-node-wrapper .react-flow__handle[data-handleid="right"] {
+    right: -5px;
+  }
+
+
+  /* Sprint 7: Düğü m seçildiğinde kenarlık rengini değiştir */
+  .react-flow__node.selected .custom-node-wrapper {
+    border: 2px solid #ff8c00;
+    /* Microsoft Mavisi (daha belirgin) */
+    box-shadow: 0 0 8px rgba(255, 140, 0, 0.4);
+    /* Hafif bir parlama efekti */
+  }
+
+  /* YENİ KURAL: Seçili grubun alt node'larını vurgula */
+  .react-flow__node.parent-selected .custom-node-wrapper {
+    border: 2px solid #ff8c00;
+    /* (Aynı stil) */
+    box-shadow: 0 0 8px rgba(255, 140, 0, 0.4);
+    /* (Aynı stil) */
+  }
+
+  /* Sprint 7: Departman Renk Kodlaması */
+  /* Varsayılan (Seçilmemiş) renk .custom-node-wrapper içindeki background: #fff; */
+
+  /* Yeşil */
+  .custom-node-wrapper.node-mekanik {
+    background-color: #d4edda;
+    /* Açık Yeşil */
+    border-color: #58a66a;
+  }
+
+  /* Turuncu */
+  .custom-node-wrapper.node-elektrik {
+    background-color: #fff3cd;
+    /* Açık Sarı/Turuncu */
+    border-color: #e6a23c;
+  }
+
+  /* Kırmızı */
+  .custom-node-wrapper.node-akiskan {
+    background-color: #f8d7da;
+    /* Açık Kırmızı */
+    border-color: #d9534f;
+  }
+
+  .custom-node-wrapper.critical {
+    border-color: #d9534f;
+    box-shadow: 0 0 12px rgba(217, 83, 79, 0.35);
+  }
+
+  .custom-node-wrapper.critical .custom-node-title {
+    color: #d9534f;
+  }
+
+  .node-badges {
+    position: absolute;
+    top: -12px;
+    /* Düğümün üst sınırından dışarı taşır */
+    right: -8px;
+    /* Sağ sınırdan biraz dışarı taşır */
+    display: flex;
+    gap: 4px;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .node-badge {
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    /* Hafif bir çerçeve */
+    border-radius: 6px;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+}

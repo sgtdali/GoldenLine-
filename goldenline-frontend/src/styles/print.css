@@ -1,0 +1,77 @@
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #print-root,
+  #print-root * {
+    visibility: visible !important;
+  }
+
+  #print-root {
+    position: fixed !important;
+    left: 50% !important;
+    top: 0 !important;
+    width: 210mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 10mm !important;
+    box-sizing: border-box !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .taskcard-print {
+    overflow: visible !important;
+  }
+
+  .print-a4 {
+    width: 100% !important;
+    min-height: 277mm !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  html,
+  body {
+    background: white !important;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
+
+  .no-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  div[class*="bg-slate-100"] {
+    background-color: #f1f5f9 !important;
+  }
+
+  div[class*="bg-slate-900"] {
+    background-color: #0f172a !important;
+  }
+
+  div[class*="bg-rose-50"] {
+    background-color: #fff1f2 !important;
+  }
+
+  .text-slate-50 {
+    color: #f8fafc !important;
+  }
+}

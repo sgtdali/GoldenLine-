@@ -1,0 +1,51 @@
+@tailwind components;
+
+@layer components {
+  .dashboard-layout {
+    @apply min-h-screen bg-inventory-bg px-4 py-10 sm:px-6 lg:px-10;
+  }
+
+  .dashboard-header {
+    @apply mb-6 flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-inventory ring-1 ring-inventory-border-subtle lg:flex-row lg:items-center lg:justify-between;
+  }
+
+  .dashboard-header h1 {
+    @apply text-3xl font-semibold text-inventory-text-main;
+  }
+
+  .dashboard-header button {
+    @apply inline-flex items-center justify-center rounded-xl border border-inventory-border-subtle px-4 py-2 text-sm font-semibold text-inventory-text-main transition hover:bg-inventory-bg;
+  }
+
+  .dashboard-container {
+    @apply mx-auto flex w-full max-w-5xl flex-col gap-6;
+  }
+
+  .info-box-container {
+    @apply grid gap-4 md:grid-cols-3;
+  }
+
+  .info-box {
+    @apply rounded-2xl border-l-4 border-sky-500 bg-white px-5 py-4 shadow-sm;
+  }
+
+  .info-box h4 {
+    @apply text-sm font-semibold uppercase tracking-wide text-inventory-text-muted;
+  }
+
+  .info-box p {
+    @apply text-2xl font-semibold text-inventory-text-main;
+  }
+
+  .chart-container {
+    @apply rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-inventory-border-subtle;
+  }
+
+  .chart-container h3 {
+    @apply mb-4 text-center text-lg font-semibold text-inventory-text-main;
+  }
+
+  .chart-wrapper {
+    @apply mx-auto max-w-sm;
+  }
+}

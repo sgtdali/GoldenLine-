@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>rom_logo.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ReactDistDir>..\goldenline-frontend\build</ReactDistDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="web\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="rom_logo.ico" />
+  </ItemGroup>
+
+  <Target Name="CopyReactDistToOutput" AfterTargets="Build" Condition="Exists('$(ReactDistDir)')">
+    <ItemGroup>
+      <ReactDistFiles Include="$(ReactDistDir)\**\*" />
+    </ItemGroup>
+    <MakeDir Directories="$(OutDir)web" />
+    <Copy SourceFiles="@(ReactDistFiles)" DestinationFiles="@(ReactDistFiles->'$(OutDir)web\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
