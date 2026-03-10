@@ -50,6 +50,76 @@ const useGoldenLineState = (projectId: string, initialProjectName: string = 'Gol
         null
     );
 
+    // Undo/Redo History
+    const [undoStack, setUndoStack] = useState<{ nodes: AppNode[]; edges: AppEdge[] }[]>([]);
+    const [redoStack, setRedoStack] = useState<{ nodes: AppNode[]; edges: AppEdge[] }[]>([]);
+
+    const takeSnapshot = useCallback(() => {
+        setUndoStack((prev) => {
+            const snapshot = { 
+                nodes: JSON.parse(JSON.stringify(nodes)), 
+                edges: JSON.parse(JSON.stringify(edges)) 
+            };
+            
+            // Don't push if it's the same as the last snapshot
+            if (prev.length > 0) {
+                const last = prev[prev.length - 1];
+                if (JSON.stringify(last.nodes) === JSON.stringify(snapshot.nodes) && 
+                    JSON.stringify(last.edges) === JSON.stringify(snapshot.edges)) {
+                    return prev;
+                }
+            }
+            
+            const nextStack = [...prev, snapshot];
+            if (nextStack.length > 25) nextStack.shift(); // Keep last 25 steps
+            return nextStack;
+        });
+        // Clear redo stack on new action
+        setRedoStack([]);
+    }, [nodes, edges]);
+
+    const undo = useCallback(() => {
+        setUndoStack((prev) => {
+            if (prev.length === 0) return prev;
+            const newUndoStack = [...prev];
+            const prevState = newUndoStack.pop();
+            
+            if (prevState) {
+                // Save current state to redo stack before moving back
+                const currentSnapshot = { 
+                    nodes: JSON.parse(JSON.stringify(nodes)), 
+                    edges: JSON.parse(JSON.stringify(edges)) 
+                };
+                setRedoStack(prevRedo => [currentSnapshot, ...prevRedo].slice(0, 25));
+                
+                setNodes(prevState.nodes);
+                setEdges(prevState.edges);
+            }
+            return newUndoStack;
+        });
+    }, [nodes, edges, setNodes, setEdges]);
+
+    const redo = useCallback(() => {
+        setRedoStack((prev) => {
+            if (prev.length === 0) return prev;
+            const newRedoStack = [...prev];
+            const nextState = newRedoStack.shift();
+            
+            if (nextState) {
+                // Save current state to undo stack before moving forward
+                const currentSnapshot = { 
+                    nodes: JSON.parse(JSON.stringify(nodes)), 
+                    edges: JSON.parse(JSON.stringify(edges)) 
+                };
+                setUndoStack(prevUndo => [...prevUndo, currentSnapshot].slice(-25));
+                
+                setNodes(nextState.nodes);
+                setEdges(nextState.edges);
+            }
+            return newRedoStack;
+        });
+    }, [nodes, edges, setNodes, setEdges]);
+
     // Load from LocalStorage on mount
     useEffect(() => {
         try {
@@ -236,6 +306,9 @@ const useGoldenLineState = (projectId: string, initialProjectName: string = 'Gol
         criticalNodeIds,
         criticalEdgeIds,
         criticalPathError,
+        undo,
+        redo,
+        takeSnapshot
     };
 };
 

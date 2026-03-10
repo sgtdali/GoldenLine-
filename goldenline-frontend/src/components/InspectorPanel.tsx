@@ -13,7 +13,8 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import GoldenLineCatalog from "./golden-line/GoldenLineCatalog";
-import { BookOpen, Settings2, BarChart3, FlaskConical, Wrench, Building2, ClipboardList, Plus, Trash2, Lock } from "lucide-react";
+import { BookOpen, Settings2, BarChart3, FlaskConical, Wrench, Building2, ClipboardList, Plus, Trash2, Lock, Save } from "lucide-react";
+import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
@@ -94,6 +95,12 @@ export default function InspectorPanel({
   const [isQualityDialogOpen, setIsQualityDialogOpen] = useState(false);
   const [specificationState, setSpecificationState] = useState<any>({});
   const [qualityState, setQualityState] = useState<any[]>([]);
+  
+  // Save to Catalog state
+  const [isSaveCatalogDialogOpen, setIsSaveCatalogDialogOpen] = useState(false);
+  const [catalogVendor, setCatalogVendor] = useState("");
+  const [catalogModel, setCatalogModel] = useState("");
+  const [catalogCategory, setCatalogCategory] = useState("Genel");
 
   const handleCatalogSelect = (item: any) => {
     if (selectedNode) {
@@ -200,6 +207,37 @@ export default function InspectorPanel({
     }
   };
 
+  const handleSaveToCatalog = () => {
+    if (!selectedNode) return;
+    if (!catalogVendor || !catalogModel) {
+      toast.error("Lütfen Marka ve Model bilgilerini doldurun");
+      return;
+    }
+
+    const CATALOG_STORAGE_KEY = 'golden_line_machine_catalog_v2';
+    const savedCatalog = localStorage.getItem(CATALOG_STORAGE_KEY);
+    let catalog = savedCatalog ? JSON.parse(savedCatalog) : [];
+
+    const data = selectedNode.data as any;
+    const newItem = {
+      id: crypto.randomUUID(),
+      name: data.machineType || data.label || "İsimsiz Makine",
+      vendor: catalogVendor,
+      model: catalogModel,
+      description: data.description || "",
+      category: catalogCategory,
+      utilities: data.utilities || {},
+      specification: data.specification || {},
+      quality: data.quality || []
+    };
+
+    catalog.push(newItem);
+    localStorage.setItem(CATALOG_STORAGE_KEY, JSON.stringify(catalog));
+    
+    toast.success(`${catalogVendor} ${catalogModel} başarıyla kataloğa eklendi`);
+    setIsSaveCatalogDialogOpen(false);
+  };
+
 
   const nodeLabel =
     (selectedNode?.data as any)?.label !== undefined
@@ -279,7 +317,7 @@ export default function InspectorPanel({
             <div className="form-group">
               <Dialog open={isCatalogDialogOpen} onOpenChange={setIsCatalogDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full gap-2 bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100 font-semibold mb-4">
+                  <Button variant="outline" size="sm" className="w-full gap-2 bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100 font-semibold mb-2">
                     <BookOpen className="w-4 h-4" /> Katalogdan Seç
                   </Button>
                 </DialogTrigger>
@@ -293,6 +331,73 @@ export default function InspectorPanel({
                   <div className="flex-1 overflow-y-auto">
                     <GoldenLineCatalog isEmbedded={true} onItemSelect={handleCatalogSelect} />
                   </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isSaveCatalogDialogOpen} onOpenChange={setIsSaveCatalogDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full gap-2 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 font-semibold mb-4"
+                    onClick={() => {
+                      setCatalogVendor("");
+                      setCatalogModel("");
+                      setCatalogCategory("Genel");
+                    }}
+                  >
+                    <Save className="w-4 h-4" /> Kataloğa Kaydet
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-emerald-700">
+                      <Save className="w-5 h-5" />
+                      Makineyi Kataloğa Ekle
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Marka / Tedarikçi</Label>
+                      <Input 
+                        placeholder="Örn: Mazak, Kasto" 
+                        value={catalogVendor} 
+                        onChange={e => setCatalogVendor(e.target.value)} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Model No</Label>
+                      <Input 
+                        placeholder="Örn: X-200, VTC-800" 
+                        value={catalogModel} 
+                        onChange={e => setCatalogModel(e.target.value)} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Kategori</Label>
+                      <select
+                        className="w-full h-10 px-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        value={catalogCategory}
+                        onChange={e => setCatalogCategory(e.target.value)}
+                      >
+                        <option value="Genel">Genel</option>
+                        <option value="İşleme">İşleme</option>
+                        <option value="Kesme">Kesme</option>
+                        <option value="Montaj">Montaj</option>
+                        <option value="Test">Test</option>
+                        <option value="Lojistik">Lojistik</option>
+                      </select>
+                    </div>
+                    <p className="text-[11px] text-slate-500 italic">
+                      Bu işlem, mevcut makinenin tüm teknik verilerini (Utilities, Spesifikasyonlar, QC) kataloğa kopyalar.
+                    </p>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsSaveCatalogDialogOpen(false)}>İptal</Button>
+                    <Button onClick={handleSaveToCatalog} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+                      Kataloğa Kaydet
+                    </Button>
+                  </DialogFooter>
                 </DialogContent>
               </Dialog>
             </div>

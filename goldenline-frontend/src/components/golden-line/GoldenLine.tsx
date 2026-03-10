@@ -25,7 +25,8 @@ import InspectorPanel from "../InspectorPanel";
 import NodeEditorHeader from "../NodeEditorHeader";
 import CustomNode from "../CustomNode";
 import GrupNode from "../GrupNode";
-import type { AppNode } from "../../types/flow";
+import type { AppNode, AppEdge } from "../../types/flow";
+import { toast } from "sonner";
 import { getDisplayNodes, getDisplayEdges } from "./utils/goldenLineUtils";
 import { GoldenLineFloatingBar } from "./components/GoldenLineFloatingBar";
 import MachineDatasheet from "./MachineDatasheet";
@@ -63,6 +64,7 @@ function GoldenLineContent() {
         breadcrumbStack, projectName,
         isCriticalPathEnabled, setIsCriticalPathEnabled,
         criticalNodeIds, criticalEdgeIds,
+        undo, redo, takeSnapshot
     } = useGoldenLineState(projectId || "default", initialProjectName);
 
     const {
@@ -75,16 +77,34 @@ function GoldenLineContent() {
     const {
         onDragStart, onDragOver, onDrop, onConnect,
         onNodeClick, onPaneClick, onNodeDoubleClick,
-        onNodeDrag, onNodeDragStop, onNodesDelete, onEdgesDelete,
+        onNodeDrag, 
+        onNodeDragStop: internalOnNodeDragStop, 
+        onNodesDelete: internalOnNodesDelete, 
+        onEdgesDelete: internalOnEdgesDelete,
     } = useFlowInteractions({
         nodes, setNodes, edges, setEdges,
         reactFlowInstance: rfInstance,
         setSelectedNode, nodeTypes, currentParentId, drillDown,
     });
 
+    const onNodeDragStop = useCallback((e: any, n: any) => { 
+        takeSnapshot(); 
+        internalOnNodeDragStop(e, n); 
+    }, [takeSnapshot, internalOnNodeDragStop]);
+
+    const onNodesDelete = useCallback((ns: any) => { 
+        takeSnapshot(); 
+        internalOnNodesDelete(ns); 
+    }, [takeSnapshot, internalOnNodesDelete]);
+
+    const onEdgesDelete = useCallback((es: any) => { 
+        takeSnapshot(); 
+        internalOnEdgesDelete(es); 
+    }, [takeSnapshot, internalOnEdgesDelete]);
+
     const { handleExportToMSProject, handleImportFromMSProject } = useEditorActions({
         reactFlowInstance: rfInstance,
-        projectId: projectId,
+        projectId: projectId || "default",
         setNodes, setEdges, projectName,
     });
 
@@ -107,6 +127,70 @@ function GoldenLineContent() {
         setReactFlowInstance(instance);
     };
 
+    const [clipboard, setClipboard] = useState<{ nodes: AppNode[], edges: AppEdge[] } | null>(null);
+
+    const handleCopy = useCallback(() => {
+        if (!rfInstance) return;
+        const selectedNodes = rfInstance.getNodes().filter((node) => node.selected) as AppNode[];
+        if (selectedNodes.length === 0) return;
+
+        const selectedNodeIds = new Set(selectedNodes.map((n) => n.id));
+        const selectedEdges = rfInstance.getEdges().filter(
+            (edge) => selectedNodeIds.has(edge.source) && selectedNodeIds.has(edge.target)
+        ) as AppEdge[];
+
+        setClipboard({ 
+            nodes: JSON.parse(JSON.stringify(selectedNodes)), 
+            edges: JSON.parse(JSON.stringify(selectedEdges)) 
+        });
+        toast.info(`${selectedNodes.length} öğe kopyalandı`);
+    }, [rfInstance]);
+
+    const handlePaste = useCallback(() => {
+        if (!clipboard || !rfInstance) return;
+        takeSnapshot();
+
+        const idMap: Record<string, string> = {};
+        const newNodes = clipboard.nodes.map((node) => {
+            const newId = crypto.randomUUID();
+            idMap[node.id] = newId;
+
+            return {
+                ...node,
+                id: newId,
+                position: {
+                    x: node.position.x + 40,
+                    y: node.position.y + 40,
+                },
+                selected: true,
+                data: {
+                    ...node.data,
+                    label: `${node.data.label} (Kopya)`
+                }
+            };
+        });
+
+        const newEdges = clipboard.edges.map((edge) => ({
+            ...edge,
+            id: crypto.randomUUID(),
+            source: idMap[edge.source],
+            target: idMap[edge.target],
+            selected: true,
+        })).filter(edge => edge.source && edge.target);
+
+        // Deselect current selection and add new items
+        setNodes((nds) => nds.map((n) => ({ ...n, selected: false })).concat(newNodes));
+        setEdges((eds) => eds.map((e) => ({ ...e, selected: false })).concat(newEdges as any));
+        
+        // Update clipboard position for next paste
+        setClipboard({
+            nodes: newNodes.map(n => ({ ...n, selected: false })),
+            edges: newEdges.map(e => ({ ...e, selected: false })) as any
+        });
+
+        toast.success(`${newNodes.length} öğe yapıştırıldı`);
+    }, [clipboard, rfInstance, setNodes, setEdges]);
+
     useEffect(() => {
         const isEditableTarget = (target: EventTarget | null) => {
             if (!(target instanceof HTMLElement)) return false;
@@ -123,6 +207,20 @@ function GoldenLineContent() {
                 }
             } else if (event.key === "Shift") {
                 setIsSnapPressed(true);
+            } else if (event.ctrlKey && event.key === "c") {
+                handleCopy();
+            } else if (event.ctrlKey && event.key === "v") {
+                handlePaste();
+            } else if (event.ctrlKey && event.key === "z") {
+                event.preventDefault();
+                if (event.shiftKey) {
+                    redo();
+                } else {
+                    undo();
+                }
+            } else if (event.ctrlKey && event.key === "y") {
+                event.preventDefault();
+                redo();
             }
         };
 
@@ -142,7 +240,7 @@ function GoldenLineContent() {
             window.removeEventListener("keyup", handleKeyUp);
             window.removeEventListener("blur", handleBlur);
         };
-    }, [isSpacePressed]);
+    }, [isSpacePressed, handleCopy, handlePaste, undo, redo, takeSnapshot]);
 
     const startResizeInspector = useCallback((event: React.MouseEvent) => {
         event.preventDefault();
@@ -186,6 +284,8 @@ function GoldenLineContent() {
                 onViewModeChange={setViewMode}
                 showGrid={showGrid}
                 onToggleGrid={() => setShowGrid(!showGrid)}
+                onUndo={undo}
+                onRedo={redo}
                 hideMSProjectButtons={true}
                 hideCriticalPathToggle={true}
             />
@@ -214,7 +314,7 @@ function GoldenLineContent() {
                                 snapGrid={[20, 20]}
                                 onNodesChange={onNodesChange}
                                 onEdgesChange={onEdgesChange}
-                                onConnect={onConnect}
+                                onConnect={(params) => { takeSnapshot(); onConnect(params); }}
                                 onInit={onInit}
                                 fitView
                                 onNodeClick={onNodeClick}
