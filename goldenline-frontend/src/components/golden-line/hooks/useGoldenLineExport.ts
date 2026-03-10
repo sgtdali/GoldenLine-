@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import type { AppNode } from '../../../types/flow';
+import { SPEC_GROUPS, getSpecValue } from '../MachineDatasheet';
 
 interface UseGoldenLineExportProps {
     nodes: AppNode[];
@@ -9,88 +10,87 @@ interface UseGoldenLineExportProps {
 
 export const useGoldenLineExport = ({ nodes, projectName }: UseGoldenLineExportProps) => {
     const handleExportExcel = useCallback(() => {
-        if (nodes.length === 0) {
-            alert("Dışa aktarılacak veri bulunamadı.");
-            return;
+        const machineNodes = nodes.filter(n => n.type !== 'grup' && n.data?.label);
+        if (machineNodes.length === 0) return;
+
+        // Group machines by their parent cell in order of grup nodes
+        const grupNodes = nodes.filter(n => n.type === 'grup');
+        const machinesByGroup: { groupName: string; machines: AppNode[] }[] = [];
+
+        grupNodes.forEach(grup => {
+            const children = machineNodes.filter(m =>
+                (m as any).parentId === grup.id || (m.data as any).parentNodeId === grup.id
+            );
+            if (children.length > 0) {
+                machinesByGroup.push({ groupName: grup.data.label, machines: children });
+            }
+        });
+
+        const groupedIds = new Set(machinesByGroup.flatMap(g => g.machines.map(m => m.id)));
+        const ungrouped = machineNodes.filter(m => !groupedIds.has(m.id));
+        if (ungrouped.length > 0) {
+            machinesByGroup.push({ groupName: 'Genel', machines: ungrouped });
         }
 
-        const nodeById = new Map(nodes.map(n => [n.id, n]));
-        const machineNodes = nodes.filter(node => node.type !== "grup");
-
-        // --- Sheet 1: Golden Line (Akış) ---
-        const flowData = machineNodes.map((node) => {
-            const parentId = (node as any).parentId || node.data?.parentNodeId;
-            const parentNode = parentId ? nodeById.get(parentId) : null;
-            const parentName = parentNode?.data?.label || "-";
-            return {
-                "Hücre": parentName,
-                "Makine": node.data?.label || ""
-            };
+        const columns: { machine: AppNode; groupName: string }[] = [];
+        machinesByGroup.forEach(({ groupName, machines }) => {
+            machines.forEach(m => columns.push({ machine: m, groupName }));
         });
 
-        // --- Sheet 2: Utilities (Teknik Veriler) ---
-        const utilsHeader = [
-            ["", "", "Elektrik Bilgileri", "", "", "Hava Bilgileri", "", "", "Doğalgaz Bilgileri", "", "", "", "Soğutma Suyu Bilgileri", "", "", "", "", "", "", "Şebeke Suyu Bilgileri", "", ""], // Row 1
-            ["Hücre No", "Makine Ad", "UPS", "Nominal Güç", "Voltaj&Hz&Faz", "Tüketim", "Bağlantı Tipi", "Ölçüler", "Tüketim", "Basınç", "Bağlantı Tipi", "Ölçüler", "Debi", "Basınç", "Devre Tipi", "Giriş Sıcaklık", "Çıkış Sıcaklık", "Bağlantı Tipi", "Ölçüler", "Debi", "Bağlantı Tipi", "Ölçüler"] // Row 2
-        ];
+        const data: any[][] = [];
 
-        const utilsData = machineNodes.map((node) => {
-            const parentId = (node as any).parentId || node.data?.parentNodeId;
-            const parentNode = parentId ? nodeById.get(parentId) : null;
-            const parentName = parentNode?.data?.label || "-";
+        // Row 1: Cell # groupings
+        const row1: any[] = ['Cell #'];
+        machinesByGroup.forEach(({ groupName, machines }) => {
+            row1.push(groupName);
+            for (let i = 1; i < machines.length; i++) row1.push('');
+        });
+        data.push(row1);
 
-            const utils = (node.data as any)?.utilities || {};
-            const electrical = utils.electrical;
-            const air = utils.air;
-            const gas = utils.naturalGas;
-            const water = utils.coolingWater;
-            const mainWater = utils.mainWater;
+        // Row 2: Sequential numbers
+        const row2: any[] = ['#'];
+        columns.forEach((_, i) => row2.push(i + 1));
+        data.push(row2);
 
-            return [
-                parentName,
-                node.data?.label || "",
-                electrical?.ups || "-",
-                electrical?.nominalPower || "-",
-                electrical?.voltageHzPhase || "-",
-                air?.consumption || "-",
-                air?.connectionType || "-",
-                air?.connectionSize || "-",
-                gas?.consumption || "-",
-                gas?.pressure || "-",
-                gas?.connectionType || "-",
-                gas?.connectionSize || "-",
-                water?.flow || "-",
-                water?.pressure || "-",
-                water?.circuitType || "-",
-                water?.inletTemp || "-",
-                water?.outletTemp || "-",
-                water?.connectionType || "-",
-                water?.connectionSize || "-",
-                mainWater?.flow || "-",
-                mainWater?.connectionType || "-",
-                mainWater?.connectionSize || "-"
-            ];
+        // Row 3: Machine/Process Name
+        const row3: any[] = ['Machine/Process Name'];
+        columns.forEach(({ machine }) => row3.push(machine.data.label || ''));
+        data.push(row3);
+
+        // Spec sections
+        SPEC_GROUPS.forEach(group => {
+            const headerRow: any[] = [group.name];
+            columns.forEach(() => headerRow.push(''));
+            data.push(headerRow);
+
+            group.specs.forEach(spec => {
+                const row: any[] = [spec];
+                columns.forEach(({ machine }) => {
+                    const val = getSpecValue(machine, spec);
+                    row.push(val === '-' ? '' : val);
+                });
+                data.push(row);
+            });
         });
 
-        const workbook = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
 
-        // Add Flow Sheet
-        const flowWorksheet = XLSX.utils.json_to_sheet(flowData);
-        XLSX.utils.book_append_sheet(workbook, flowWorksheet, "Golden Line");
+        // Merge Row 1 cells for each cell group
+        const merges: XLSX.Range[] = [];
+        let colIdx = 1;
+        machinesByGroup.forEach(({ machines }) => {
+            if (machines.length > 1) {
+                merges.push({ s: { r: 0, c: colIdx }, e: { r: 0, c: colIdx + machines.length - 1 } });
+            }
+            colIdx += machines.length;
+        });
+        if (merges.length > 0) ws['!merges'] = merges;
 
-        // Add Utilities Sheet
-        const utilsWorksheet = XLSX.utils.aoa_to_sheet([...utilsHeader, ...utilsData]);
+        ws['!cols'] = [{ wch: 52 }, ...columns.map(() => ({ wch: 26 }))];
 
-        if (!utilsWorksheet['!merges']) utilsWorksheet['!merges'] = [];
-        utilsWorksheet['!merges'].push({ s: { r: 0, c: 2 }, e: { r: 0, c: 4 } });
-        utilsWorksheet['!merges'].push({ s: { r: 0, c: 5 }, e: { r: 0, c: 7 } });
-        utilsWorksheet['!merges'].push({ s: { r: 0, c: 8 }, e: { r: 0, c: 11 } });
-        utilsWorksheet['!merges'].push({ s: { r: 0, c: 12 }, e: { r: 0, c: 18 } });
-        utilsWorksheet['!merges'].push({ s: { r: 0, c: 19 }, e: { r: 0, c: 21 } });
-
-        XLSX.utils.book_append_sheet(workbook, utilsWorksheet, "Teknik Veriler");
-
-        XLSX.writeFile(workbook, `${projectName || "Golden_Line"}_Detayli_Akis.xlsx`);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'MCD');
+        XLSX.writeFile(wb, `${projectName || 'Golden_Line'}_MCD.xlsx`);
     }, [nodes, projectName]);
 
     return { handleExportExcel };

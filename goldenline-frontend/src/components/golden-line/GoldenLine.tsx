@@ -29,6 +29,7 @@ import type { AppNode } from "../../types/flow";
 import { getDisplayNodes, getDisplayEdges } from "./utils/goldenLineUtils";
 import { GoldenLineFloatingBar } from "./components/GoldenLineFloatingBar";
 import MachineDatasheet from "./MachineDatasheet";
+import GoldenLineCatalog from "./GoldenLineCatalog";
 
 function GoldenLineContent() {
     const navigate = useNavigate();
@@ -43,6 +44,7 @@ function GoldenLineContent() {
     const [isSnapPressed, setIsSnapPressed] = useState(false);
     const [viewMode, setViewMode] = useState<"flow" | "datasheet">("flow");
     const [showGrid, setShowGrid] = useState(true);
+    const [showCatalog, setShowCatalog] = useState(false);
     const isResizingInspector = useRef(false);
 
     const nodeTypes: NodeTypes = useMemo(() => ({
@@ -191,6 +193,14 @@ function GoldenLineContent() {
             <div className="editor-container">
                 {viewMode === "flow" ? (
                     <>
+                        {showCatalog && (
+                            <div className="catalog-sidebar">
+                                <GoldenLineCatalog
+                                    isEmbedded
+                                    onItemDragStart={(e, type, label, item) => onDragStart(e, type, label, item)}
+                                />
+                            </div>
+                        )}
                         <div className="react-flow-wrapper" ref={reactFlowWrapper} onDragOver={onDragOver} onDrop={onDrop}>
                             <ReactFlow
                                 nodes={displayNodes}
@@ -219,7 +229,11 @@ function GoldenLineContent() {
                                 {showGrid && <Background gap={20} size={1} variant={BackgroundVariant.Dots} color="#334155" />}
                             </ReactFlow>
 
-                            <GoldenLineFloatingBar onDragStart={onDragStart} />
+                            <GoldenLineFloatingBar
+                                onDragStart={onDragStart}
+                                showCatalog={showCatalog}
+                                onToggleCatalog={() => setShowCatalog(v => !v)}
+                            />
                         </div>
 
                         {selectedNode && (

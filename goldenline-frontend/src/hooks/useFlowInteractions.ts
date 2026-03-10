@@ -344,11 +344,10 @@ export const useFlowInteractions = ({
       const newNodeId = uuidv4();
 
       // Katalog verisi varsa kullan
-      let utilities = undefined;
+      let catalogParsed: any = null;
       if (catalogDataRaw) {
         try {
-          const catalogData = JSON.parse(catalogDataRaw);
-          utilities = catalogData.utilities;
+          catalogParsed = JSON.parse(catalogDataRaw);
         } catch (e) {
           console.error("Katalog verisi parse edilemedi", e);
         }
@@ -362,7 +361,11 @@ export const useFlowInteractions = ({
             completion: 0,
             department: 'Genel',
             duration: 0,
-            utilities: utilities,
+            ...(catalogParsed && {
+              machineType: catalogParsed.name,
+              utilities: catalogParsed.utilities,
+              specification: catalogParsed.specification,
+            }),
           };
 
       const newNodeData: AppNodeData = {

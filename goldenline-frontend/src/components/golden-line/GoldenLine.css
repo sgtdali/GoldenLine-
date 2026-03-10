@@ -471,6 +471,15 @@
   opacity: 0.6;
 }
 
+.catalog-sidebar {
+  width: 320px;
+  min-width: 320px;
+  border-right: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
 .node-floating-bar {
   position: absolute;
   left: 50%;
