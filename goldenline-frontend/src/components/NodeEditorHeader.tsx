@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import type { BreadcrumbItem } from "../hooks/useFlowState";
 import { Button } from "./ui/button";
 import { Switch } from "./ui/switch";
+import { LayoutGrid, Table } from "lucide-react";
 
 type NodeEditorHeaderProps = {
   projectName: string;
@@ -16,6 +17,10 @@ type NodeEditorHeaderProps = {
   onBreadcrumbClick: (id: string | null) => void;
   isCriticalPathEnabled: boolean;
   onToggleCriticalPath: (enabled: boolean) => void;
+  viewMode: "flow" | "datasheet";
+  onViewModeChange: (mode: "flow" | "datasheet") => void;
+  showGrid?: boolean;
+  onToggleGrid?: () => void;
   hideMSProjectButtons?: boolean;
   hideCriticalPathToggle?: boolean;
 };
@@ -33,6 +38,10 @@ const NodeEditorHeader: React.FC<NodeEditorHeaderProps> = ({
   onBreadcrumbClick,
   isCriticalPathEnabled,
   onToggleCriticalPath,
+  viewMode,
+  onViewModeChange,
+  showGrid,
+  onToggleGrid,
   hideMSProjectButtons = false,
   hideCriticalPathToggle = false,
 }) => {
@@ -92,6 +101,40 @@ const NodeEditorHeader: React.FC<NodeEditorHeaderProps> = ({
       </div>
 
       <div className="header-right">
+        <div className="view-mode-toggle flex items-center bg-slate-100 p-1 rounded-lg mr-4 border border-slate-200">
+          <Button
+            variant={viewMode === "flow" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onViewModeChange("flow")}
+            className={`rounded-md gap-2 ${viewMode === "flow" ? "shadow-sm" : "text-slate-500"}`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Akış Görünümü
+          </Button>
+          <Button
+            variant={viewMode === "datasheet" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onViewModeChange("datasheet")}
+            className={`rounded-md gap-2 ${viewMode === "datasheet" ? "shadow-sm" : "text-slate-500"}`}
+          >
+            <Table className="w-4 h-4" />
+            Spesifikasyon Matrisi
+          </Button>
+        </div>
+
+        {viewMode === "flow" && onToggleGrid && (
+          <Button
+            variant={showGrid ? "default" : "outline"}
+            size="sm"
+            onClick={onToggleGrid}
+            className="mr-4 gap-2"
+            title="Izgarayı Aç/Kapat"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Izgara
+          </Button>
+        )}
+
         {!hideCriticalPathToggle && (
           <label className="critical-toggle">
             <Switch

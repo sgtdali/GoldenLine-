@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import {
     useNodesState,
     useEdgesState,
@@ -147,7 +148,7 @@ const useGoldenLineState = (projectId: string, initialProjectName: string = 'Gol
             const { parentDataMap } = buildAggregatedData();
             localStorage.setItem(STORAGE_KEY, JSON.stringify({ flowCache: parentDataMap }));
             setFlowCache(parentDataMap);
-            alert('Golden Line basariyla kaydedildi!');
+            toast.success('Golden Line başarıyla kaydedildi!');
         } catch (err) {
             console.error('Error saving Golden Line data:', err);
             setError('Kaydedilemedi.');

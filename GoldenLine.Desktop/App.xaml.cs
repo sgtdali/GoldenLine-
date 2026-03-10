@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Windows;
 using Microsoft.Data.Sqlite;
@@ -22,7 +22,7 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        MessageBox.Show("Uygulama baÅŸlatÄ±lÄ±yor...", "Debug");
+        MessageBox.Show("Uygulama başlatılıyor...", "Debug");
         try
         {
             InitializeDatabase();
@@ -30,11 +30,19 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Kritik BaÅŸlatma HatasÄ±:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}", 
+            MessageBox.Show($"Kritik Başlatma Hatası:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}", 
                 "GoldenLine Kritik Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             Environment.Exit(1);
         }
     }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        CleanupUserTracking();
+        base.OnExit(e);
+    }
+
+    private static string? _currentUserTrackingFile;
 
     private static void InitializeDatabase()
     {
@@ -51,11 +59,14 @@ public partial class App : Application
             var dataFolder = Path.GetDirectoryName(dbPath) ?? AppContext.BaseDirectory;
             Directory.CreateDirectory(dataFolder);
 
+            // Active User Tracking (.wh files)
+            TrackActiveUser(dataFolder);
+
             var backupsFolder = Path.Combine(dataFolder, ".backups");
             Directory.CreateDirectory(backupsFolder);
             TryHideFolder(backupsFolder);
 
-            TryCreateDailyBackup(dbPath, backupsFolder);
+            TryCreateLaunchBackup(dbPath, backupsFolder);
 
             ConnectionString = BuildConnectionString(dbPath);
             DbOptions = new DbContextOptionsBuilder<AppDbContext>()
@@ -64,36 +75,109 @@ public partial class App : Application
 
             using var context = new AppDbContext(DbOptions);
             context.Database.Migrate();
+            
+            // WAL (Write-Ahead Logging) mode is critical for multi-user access
             context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+            context.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+            
             EnsureAdminUser(context);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Uygulama baÅŸlatÄ±lamadÄ± (VeritabanÄ± HatasÄ±):\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}", 
+            MessageBox.Show($"Uygulama başlatılamadı (Veritabanı Hatası):\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}", 
                 "GoldenLine Kritik Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             Environment.Exit(1);
         }
     }
 
-    private static void TryCreateDailyBackup(string dbPath, string backupsFolder)
+    private static void TrackActiveUser(string dataFolder)
+    {
+        try
+        {
+            var usersFolder = Path.Combine(dataFolder, ".users");
+            Directory.CreateDirectory(usersFolder);
+            TryHideFolder(usersFolder);
+
+            var fileName = $"{Environment.MachineName}_{Environment.UserName}.wh";
+            _currentUserTrackingFile = Path.Combine(usersFolder, fileName);
+            
+            File.WriteAllText(_currentUserTrackingFile, DateTime.Now.ToString("O"));
+        }
+        catch
+        {
+            // Non-critical
+        }
+    }
+
+    private static void CleanupUserTracking()
+    {
+        try
+        {
+            if (_currentUserTrackingFile != null && File.Exists(_currentUserTrackingFile))
+            {
+                File.Delete(_currentUserTrackingFile);
+            }
+        }
+        catch
+        {
+            // Non-critical
+        }
+    }
+
+    private static void TryCreateLaunchBackup(string dbPath, string backupsFolder)
     {
         if (!File.Exists(dbPath))
         {
             return;
         }
 
-        var backupName = $"app-{DateTime.Today:yyyyMMdd}.db";
+        // Keep 1 backup per hour or just use full timestamp for "every launch"
+        var backupName = $"app-{DateTime.Now:yyyyMMdd-HHmmss}.db";
         var backupPath = Path.Combine(backupsFolder, backupName);
+        
+        // Ensure no collision (unlikely but safe)
         if (File.Exists(backupPath))
         {
             return;
         }
 
-        using var connection = new SqliteConnection(BuildConnectionString(dbPath));
-        connection.Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = $"VACUUM INTO '{EscapeSqlitePath(backupPath)}';";
-        command.ExecuteNonQuery();
+        try
+        {
+            using var connection = new SqliteConnection(BuildConnectionString(dbPath));
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = $"VACUUM INTO '{EscapeSqlitePath(backupPath)}';";
+            command.ExecuteNonQuery();
+
+            // Keep only last 50 backups to prevent bloat
+            CleanupOldBackups(backupsFolder);
+        }
+        catch (Exception ex)
+        {
+            // Best effort backup
+            Console.WriteLine($"Backup failed: {ex.Message}");
+        }
+    }
+
+    private static void CleanupOldBackups(string backupsFolder)
+    {
+        try
+        {
+            var files = Directory.GetFiles(backupsFolder, "app-*.db")
+                .Select(f => new FileInfo(f))
+                .OrderByDescending(f => f.CreationTime)
+                .Skip(50)
+                .ToList();
+
+            foreach (var file in files)
+            {
+                file.Delete();
+            }
+        }
+        catch
+        {
+            // Non-critical
+        }
     }
 
     private static string BuildConnectionString(string dbPath)

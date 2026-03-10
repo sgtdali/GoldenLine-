@@ -28,6 +28,7 @@ import GrupNode from "../GrupNode";
 import type { AppNode } from "../../types/flow";
 import { getDisplayNodes, getDisplayEdges } from "./utils/goldenLineUtils";
 import { GoldenLineFloatingBar } from "./components/GoldenLineFloatingBar";
+import MachineDatasheet from "./MachineDatasheet";
 
 function GoldenLineContent() {
     const navigate = useNavigate();
@@ -40,6 +41,8 @@ function GoldenLineContent() {
     const [inspectorWidth, setInspectorWidth] = useState<number | null>(null);
     const [isSpacePressed, setIsSpacePressed] = useState(false);
     const [isSnapPressed, setIsSnapPressed] = useState(false);
+    const [viewMode, setViewMode] = useState<"flow" | "datasheet">("flow");
+    const [showGrid, setShowGrid] = useState(true);
     const isResizingInspector = useRef(false);
 
     const nodeTypes: NodeTypes = useMemo(() => ({
@@ -177,62 +180,78 @@ function GoldenLineContent() {
                 onImportMSProject={(file) => handleImportFromMSProject(file)}
                 onTriggerImport={() => importInputRef.current?.click()}
                 importInputRef={importInputRef}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                showGrid={showGrid}
+                onToggleGrid={() => setShowGrid(!showGrid)}
                 hideMSProjectButtons={true}
                 hideCriticalPathToggle={true}
             />
 
             <div className="editor-container">
-                <div className="react-flow-wrapper" ref={reactFlowWrapper} onDragOver={onDragOver} onDrop={onDrop}>
-                    <ReactFlow
-                        nodes={displayNodes}
-                        edges={displayEdges}
-                        nodeTypes={nodeTypes}
-                        connectionMode={ConnectionMode.Loose}
-                        minZoom={0.1}
-                        panOnDrag={isSpacePressed ? [0, 1] : [1]}
-                        selectionOnDrag
-                        snapToGrid={isSnapPressed}
-                        snapGrid={[10, 10]}
-                        onNodesChange={onNodesChange}
-                        onEdgesChange={onEdgesChange}
-                        onConnect={onConnect}
-                        onInit={onInit}
-                        fitView
-                        onNodeClick={onNodeClick}
-                        onPaneClick={onPaneClick}
-                        onNodeDoubleClick={onNodeDoubleClick}
-                        onNodeDrag={onNodeDrag as any}
-                        onNodeDragStop={onNodeDragStop as any}
-                        onNodesDelete={onNodesDelete as any}
-                        onEdgesDelete={onEdgesDelete as any}
-                    >
-                        <Controls />
-                        <Background gap={10} size={1} variant={BackgroundVariant.Lines} />
-                    </ReactFlow>
-
-                    <GoldenLineFloatingBar onDragStart={onDragStart} />
-                </div>
-
-                {selectedNode && (
+                {viewMode === "flow" ? (
                     <>
-                        <div className="inspector-resize-handle" onMouseDown={startResizeInspector} />
-                        <InspectorPanel
-                            selectedNode={selectedNode}
-                            predecessors={predecessors}
-                            successors={successors}
-                            updateNodeLabel={updateNodeLabel}
-                            updateNodeMachineType={updateNodeMachineType}
-                            updateNodeDepartment={updateNodeDepartment}
-                            updateNodeCompletion={updateNodeCompletion}
-                            updateNodeDuration={updateNodeDuration}
-                            updateNodeImage={updateNodeImage}
-                            updateNodeUtilities={updateNodeUtilities}
-                            updateNodeSpecification={updateNodeSpecification}
-                            updateNodeQuality={updateNodeQuality}
-                            style={inspectorWidth ? { width: inspectorWidth } : undefined}
-                            isSimpleMode={true}
-                        />
+                        <div className="react-flow-wrapper" ref={reactFlowWrapper} onDragOver={onDragOver} onDrop={onDrop}>
+                            <ReactFlow
+                                nodes={displayNodes}
+                                edges={displayEdges}
+                                nodeTypes={nodeTypes}
+                                connectionMode={ConnectionMode.Loose}
+                                minZoom={0.1}
+                                panOnDrag={isSpacePressed ? [0, 1] : [1]}
+                                selectionOnDrag
+                                snapToGrid={true}
+                                snapGrid={[20, 20]}
+                                onNodesChange={onNodesChange}
+                                onEdgesChange={onEdgesChange}
+                                onConnect={onConnect}
+                                onInit={onInit}
+                                fitView
+                                onNodeClick={onNodeClick}
+                                onPaneClick={onPaneClick}
+                                onNodeDoubleClick={onNodeDoubleClick}
+                                onNodeDrag={onNodeDrag as any}
+                                onNodeDragStop={onNodeDragStop as any}
+                                onNodesDelete={onNodesDelete as any}
+                                onEdgesDelete={onEdgesDelete as any}
+                            >
+                                <Controls />
+                                {showGrid && <Background gap={20} size={1} variant={BackgroundVariant.Dots} color="#334155" />}
+                            </ReactFlow>
+
+                            <GoldenLineFloatingBar onDragStart={onDragStart} />
+                        </div>
+
+                        {selectedNode && (
+                            <>
+                                <div className="inspector-resize-handle" onMouseDown={startResizeInspector} />
+                                <InspectorPanel
+                                    selectedNode={selectedNode}
+                                    predecessors={predecessors}
+                                    successors={successors}
+                                    updateNodeLabel={updateNodeLabel}
+                                    updateNodeMachineType={updateNodeMachineType}
+                                    updateNodeDepartment={updateNodeDepartment}
+                                    updateNodeCompletion={updateNodeCompletion}
+                                    updateNodeDuration={updateNodeDuration}
+                                    updateNodeImage={updateNodeImage}
+                                    updateNodeUtilities={updateNodeUtilities}
+                                    updateNodeSpecification={updateNodeSpecification}
+                                    updateNodeQuality={updateNodeQuality}
+                                    style={inspectorWidth ? { width: inspectorWidth } : undefined}
+                                    isSimpleMode={true}
+                                />
+                            </>
+                        )}
                     </>
+                ) : (
+                    <MachineDatasheet 
+                        nodes={nodes} 
+                        updateNodeLabel={updateNodeLabel}
+                        updateNodeMachineType={updateNodeMachineType}
+                        updateNodeUtilities={updateNodeUtilities}
+                        updateNodeSpecification={updateNodeSpecification}
+                    />
                 )}
             </div>
         </div>

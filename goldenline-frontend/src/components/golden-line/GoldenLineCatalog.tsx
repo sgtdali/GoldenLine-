@@ -385,8 +385,16 @@ export default function GoldenLineCatalog({ isEmbedded, onItemDragStart, onItemS
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => navigate('/golden-line')}
-                                className="rounded-full hover:bg-slate-100"
+                                onClick={() => {
+                                    if (window.history.length > 1) {
+                                        navigate(-1);
+                                    } else {
+                                        navigate('/golden-line');
+                                    }
+                                }}
+                                type="button"
+                                className="rounded-full hover:bg-slate-100 flex items-center justify-center"
+                                title="Geri"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </Button>
